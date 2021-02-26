@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Text, Input, Card, Button } from 'react-native-elements';
-
+import _ from "lodash";
 
 
 
@@ -13,8 +13,8 @@ const computeTime = (numResins, startTime) => {
   let resinDiff = TOTALRESIN - numResins;
   let timeToComplete = resinDiff * RESININTERVAL ;
 
-
-  let timeDifference = parseInt(Math.abs(new Date().getTime() - startTime.getTime()) / 1000);
+  let d = new Date();
+  let timeDifference = parseInt(Math.abs(d.getTime() - startTime.getTime()) / 1000);
 
   let currHours = parseInt((timeToComplete - timeDifference / 60) / 60);
   let currMins = parseInt((timeToComplete - timeDifference / 60) % 60);
@@ -27,7 +27,7 @@ const computeTime = (numResins, startTime) => {
     hours: currHours,
     min: currMins,
     sec: currSecs,
-    resins: currResins
+    resins: currResins,
   }
 
   return timeLeft; 
@@ -36,19 +36,21 @@ const computeTime = (numResins, startTime) => {
 
 const Timer = () => {
   // let time = 
-  let startTime = new Date();
+  const [startTime, setStartTime] = useState(new Date());
   
   const [numResins, setNumResins] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(-1);
+  const [timeLeft, setTimeLeft] = useState({});
   
   useEffect(() => {
-    if(timeLeft != -1){
-      const timer = setInterval(() => {
+    if(!_.isEmpty(timeLeft)){
+      const timer = setTimeout(() => {
         setTimeLeft(computeTime(timeLeft.resins, startTime));
-      });
+      }, 1000);
+      return () => {
+        clearTimeout(timer);
+      };
     }
-    // return () => clearTimeout(timer);
-  })
+  });
   
 
   return (
@@ -57,9 +59,12 @@ const Timer = () => {
         keyboardType='number-pad' 
         onChangeText={(text)=>{setNumResins(parseInt(text))}} />
 
-      <Button title="Calculate" onPress={()=>{ setTimeLeft(computeTime(numResins, startTime))}} />
-      
+      <Button title="Calculate" onPress={()=>{
+        setTimeLeft(computeTime(numResins, startTime));
+        setStartTime(new Date());
+      }} />
       <Text h3> {timeLeft.hours} {timeLeft.min} {timeLeft.sec} </Text>
+      {/* {timeLeft ? () : (<Text></Text>)} */}
     </Card>
   )
 }
